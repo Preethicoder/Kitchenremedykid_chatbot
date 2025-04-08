@@ -39,7 +39,7 @@ HomeCure-Kids is a web-based chatbot that provides kitchen-based home remedies f
    ```bash
    python -m venv venv
    source venv/bin/activate  # Windows: venv\Scripts\activate
-3.**Install dependencies:**:
+3. **Install dependencies:**:
    ```bash
    pip install -r requirements.txt
 4. **Set your OpenAI API key: Create a .env file and add**:
@@ -47,6 +47,45 @@ HomeCure-Kids is a web-based chatbot that provides kitchen-based home remedies f
 5. **Start the server**:
    uvicorn main:app --reload
 Your backend will run at: http://localhost:8000
+
+### 💻 Frontend Setup (React)
+1. **Navigate to frontend folder**:
+   ```bash
+   cd ../frontend
+2. **Install Node.js dependenciest**:
+   ```bash
+   npm install
+3. **Start the React app:**:
+   ```bash
+   npm start
+The app will run at: http://localhost:3000
+
+### CORS Configuration
+  Make sure your FastAPI main.py includes:
+  app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+   )
+
+### 🧪 Testing the Chatbot
+1.Open http://localhost:3000 in your browser.
+2.Type a symptom like "My kid has a sore throat".
+3.The chatbot will respond with friendly, bullet-pointed home remedies.
+
+### 🙌 Contributing
+Contributions are welcome!
+
+1)Open issues
+
+2)Submit pull requests
+
+3)Improve documentation
+
+4)Suggest better remedies 💡
+### ⚠️ Disclaimer
+This chatbot provides kitchen-based home remedy suggestions based on scraped public content and AI-generated summaries. It is not a replacement for medical advice. Please consult a licensed healthcare provider for serious symptoms or emergencies.
 
 
  
