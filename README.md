@@ -35,8 +35,18 @@ HomeCure-Kids is a web-based chatbot that provides kitchen-based home remedies f
    ```bash
    git clone https://github.com/yourusername/HomeCure-Kids-Chatbot.git
    cd HomeCure-Kids-Chatbot/backend
-2. ** Create and activate a virtual environment: **:
+2. **Create and activate a virtual environment**:
    ```bash
    python -m venv venv
    source venv/bin/activate  # Windows: venv\Scripts\activate
+3.**Install dependencies:**:
+   ```bash
+   pip install -r requirements.txt
+4. **Set your OpenAI API key: Create a .env file and add**:
+   OPENAI_API_KEY=your-api-key-here
+5. **Start the server**:
+   uvicorn main:app --reload
+Your backend will run at: http://localhost:8000
+
+
  
