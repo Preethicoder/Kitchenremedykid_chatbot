@@ -1,3 +1,6 @@
 [submodule "homecure-frontend"]
 	path = homecure-frontend
 	url = https://github.com/Preethicoder/HomeRemedy-Kids-Chatbot.git
+[submodule "homecure-fronten"]
+	path = homecure-fronten
+	url = https://github.com/Preethicoder/Kitchenremedykid_chatbot.git

@@ -1,0 +1,94 @@
+/* Global Styles */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* App Styles */
+.app {
+  min-height: 100vh;
+  background-color: #FFEDD5; /* bg-orange-50 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+.title {
+  font-size: 2rem; /* text-2xl */
+  font-weight: bold; /* font-bold */
+  color: #FB923C; /* text-orange-700 */
+  margin-bottom: 1rem; /* mb-4 */
+}
+
+/* Chat container */
+.chat-container {
+  width: 100%;
+  max-width: 36rem; /* max-w-xl */
+  background-color: white; /* bg-white */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-lg */
+  border-radius: 1rem; /* rounded-2xl */
+  padding: 1rem; /* p-4 */
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* gap-3 */
+  overflow-y: auto;
+  height: 70vh;
+}
+
+.message {
+  padding: 0.75rem; /* p-3 */
+  border-radius: 1rem; /* rounded-xl */
+  max-width: 15rem; /* max-w-xs */
+}
+
+.user-message {
+  background-color: #FFEDD5; /* bg-orange-100 */
+  align-self: flex-end; /* self-end */
+}
+
+.ai-message {
+  background-color: #D1FAE5; /* bg-green-100 */
+  align-self: flex-start; /* self-start */
+}
+
+.loading {
+  color: #9CA3AF; /* text-gray-400 */
+  font-style: italic; /* italic */
+  align-self: flex-start; /* self-start */
+}
+
+/* Input and Button */
+.input-container {
+  width: 100%;
+  max-width: 36rem; /* max-w-xl */
+  margin-top: 1rem; /* mt-4 */
+  display: flex;
+}
+
+.input {
+  flex: 1;
+  padding: 0.75rem; /* p-3 */
+  border: 1px solid #FB923C; /* border-orange-300 */
+  border-radius: 1rem 0 0 1rem; /* rounded-l-xl */
+  outline: none;
+}
+
+.send-button {
+  background-color: #FB923C; /* bg-orange-500 */
+  color: white; /* text-white */
+  padding: 0.75rem 1rem; /* px-4 */
+  border-radius: 0 1rem 1rem 0; /* rounded-r-xl */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border: none;
+}
+
+.send-button:hover {
+  background-color: #EA580C; /* hover:bg-orange-600 */
+}
+
+.send-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
