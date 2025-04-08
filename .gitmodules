@@ -1,0 +1,3 @@
+[submodule "homecure-frontend"]
+	path = homecure-frontend
+	url = https://github.com/Preethicoder/HomeRemedy-Kids-Chatbot.git
