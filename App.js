@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
-import ReactMarkdown from 'react-markdown';
+
 function App() {
   const [messages, setMessages] = useState([
     { role: 'ai', content: '👋 Hi! I can help with home remedies for your kid’s symptoms. What’s going on?' }
@@ -88,7 +88,7 @@ function App() {
             key={idx}
             className={`message ${msg.role === 'user' ? 'user-message' : 'ai-message'}`}
           >
-            <ReactMarkdown>{msg.content}</ReactMarkdown>
+            {msg.content}
             {msg.imageUrl && <img src={msg.imageUrl} alt="Generated Remedy" />}
           </div>
         ))}
