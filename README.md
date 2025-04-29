@@ -67,6 +67,7 @@ The app will run at: http://localhost:3000
     allow_origins=["http://localhost:3000"],
     allow_methods=["*"],
     allow_headers=["*"],
+     expose_headers=["Content-Disposition"], 
    )
 
 ### 🧪 Testing the Chatbot
