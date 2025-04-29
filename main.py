@@ -48,6 +48,7 @@ app.add_middleware(
     allow_origins=["http://localhost:3000"],  # Set to your React origin in production
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],  # <-- Important!
 )
 
 urls = [
@@ -161,16 +162,47 @@ async def chat(req: ChatRequest):
     return {"answer": response["answer"], "image_url": image_url}
 
 
+async def generate_title(last_ai_message):
+    response = client.chat.completions.create(
+        model= "gpt-4o-mini",
+        messages=[{
+            "role":"system",
+            "content":"You are a helpful assistant that generates concise, informative titles for remedy instructions."
+        },
+        {
+            "role":"user",
+            "content":f"Suggest a short, clear title suitable as a file name for this remedy:\n{last_ai_message}"
+        }
+        ]
+    )
+    title = response.choices[0].message.content.strip()
+    file_name = title.lower().replace(' ', '_').replace('&', 'and') + ".pdf"
+    print("response:::",file_name)
+
+    return file_name
 
 
 @app.post("/generate_pdf")
 async def generate_pdf(remedy_request: RemedyRequest):
+    print("generate PDF:::", remedy_request)
+
+    # Get the last AI message (remedy suggestion)
     last_ai_message = next((m.content for m in reversed(remedy_request.messages) if m.role != "user"),
                            "no Remedy found")
+
+    # Generate the title for the PDF
+    title = await generate_title(last_ai_message)
+    print("Generated title:::", title)
+
+    # Prepare the remedy text for the PDF
     remedy_text = f"Recommended Remedy:\n{last_ai_message}"
-    # remedy_text = "\n".join([f"{m.role}: {m.content}" for m in remedy_request.messages])
-    pdf_path = pdf_utils.create_remedy_pdf(remedy_text)
-    print(pdf_path)
+
+    # Create the remedy PDF
+    pdf_path = pdf_utils.create_remedy_pdf(remedy_text,title)
+    print("Generated PDF Path:::", pdf_path)
+
+    # Send the generated remedy PDF via email
     await email_utils.send_remedy_email("preethisivakumar94@gmail.com", pdf_path)
-    # Return the generated PDF as a file response
-    return FileResponse(pdf_path, filename="remedy.pdf", media_type='application/pdf')
+
+    # Return the generated PDF as a file response, using the generated title for filename
+    return FileResponse(pdf_path, filename=title, media_type='application/pdf')

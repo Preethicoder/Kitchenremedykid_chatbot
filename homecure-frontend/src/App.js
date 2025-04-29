@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
-import ReactMarkdown from 'react-markdown';
+
 function App() {
   const [messages, setMessages] = useState([
     { role: 'ai', content: '👋 Hi! I can help with home remedies for your kid’s symptoms. What’s going on?' }
@@ -45,34 +45,51 @@ function App() {
   };
 
   const generatePDF = async () => {
-    setGeneratingPDF(true);
-    try {
-      const res = await fetch('http://localhost:8000/generate_pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: messages.map(m => ({ role: m.role, content: m.content }))
-        })
-      });
+  setGeneratingPDF(true);
+  try {
+    const res = await fetch('http://localhost:8000/generate_pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: messages.map(m => ({ role: m.role, content: m.content }))
+      })
+    });
 
-      if (!res.ok) throw new Error('PDF generation failed');
+    if (!res.ok) throw new Error('PDF generation failed');
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      // Create a download link
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'remedy.pdf';
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('PDF Error:', error);
-      alert('Could not generate PDF. Try again later.');
-    } finally {
-      setGeneratingPDF(false);
+    // Extract the filename from the Content-Disposition header
+    const contentDisposition = res.headers.get('Content-Disposition');
+    let filename = 'remedy.pdf';  // Fallback to a default filename
+    console.log("Content-Disposition header:", contentDisposition);
+    if (contentDisposition && contentDisposition.toLowerCase().includes('attachment')) {
+    console.log("inside inseide")
+      const matches = contentDisposition.match(/filename\*?=(?:UTF-8''|")?([^;\r\n"]+)/i);
+      if (matches && matches[1]) {
+        filename = decodeURIComponent(matches[1]);
+        console.log("Decoded filename:", filename);
+        console.log("inside")
+      }
     }
-  };
+
+    console.log('Filename extracted:', filename);  // For debugging
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    // Create a download link
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;  // <-- Use extracted filename here
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('PDF Error:', error);
+    alert('Could not generate PDF. Try again later.');
+  } finally {
+    setGeneratingPDF(false);
+  }
+};
+
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') sendMessage();
@@ -88,7 +105,7 @@ function App() {
             key={idx}
             className={`message ${msg.role === 'user' ? 'user-message' : 'ai-message'}`}
           >
-            <ReactMarkdown>{msg.content}</ReactMarkdown>
+            {msg.content}
             {msg.imageUrl && <img src={msg.imageUrl} alt="Generated Remedy" />}
           </div>
         ))}
