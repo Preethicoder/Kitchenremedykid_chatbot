@@ -70,10 +70,23 @@ The app will run at: http://localhost:3000
      expose_headers=["Content-Disposition"], 
    )
 
-### 🧪 Testing the Chatbot
-1.Open http://localhost:3000 in your browser.
-2.Type a symptom like "My kid has a sore throat".
-3.The chatbot will respond with friendly, bullet-pointed home remedies.
+### ➕ Additional Features
+
+- 🖼️ **Visual Remedy Guide** – Generates step-by-step illustrations using DALL·E for each remedy.
+- 📝 **PDF Export** – Remedies can be downloaded as nicely formatted PDFs.
+- 📧 **Email Support** – Remedy PDFs can be sent directly to your inbox.
+- ✅ **Relevance Evaluation** – Each remedy is automatically evaluated for accuracy and relevance.
+
+### 🧪 Testing the Chatbot (Extended)
+
+1. Open http://localhost:3000 in your browser.
+2. Ask a question like "My kid has a sore throat".
+3. The chatbot will:
+   - Respond with a friendly, step-by-step remedy.
+   - Show a visual guide (image).
+   - Optionally allow you to export the remedy as a PDF.
+   - Internally evaluate how relevant the answer is and log it.
+
 
 ### 🙌 Contributing
 Contributions are welcome!
