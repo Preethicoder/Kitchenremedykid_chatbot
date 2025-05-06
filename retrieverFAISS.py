@@ -1,13 +1,16 @@
 from pathlib import Path
+import os
 from typing import List
+
+from dotenv import load_dotenv
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-
+load_dotenv()
 FAISS_INDEX_PATH = "faiss_index"
 SEEN_URLS_PATH = Path("seen_urls.txt")
-embedding = OpenAIEmbeddings()
+embedding = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 text_splitter = RecursiveCharacterTextSplitter()
 
 def load_documents_from_urls(urls: List[str]):

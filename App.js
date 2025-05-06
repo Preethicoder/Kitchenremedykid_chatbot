@@ -45,34 +45,48 @@ function App() {
   };
 
   const generatePDF = async () => {
-    setGeneratingPDF(true);
-    try {
-      const res = await fetch('http://localhost:8000/generate_pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: messages.map(m => ({ role: m.role, content: m.content }))
-        })
-      });
+  setGeneratingPDF(true);
+  try {
+    const res = await fetch('http://localhost:8000/generate_pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: messages.map(m => ({ role: m.role, content: m.content }))
+      })
+    });
 
-      if (!res.ok) throw new Error('PDF generation failed');
+    if (!res.ok) throw new Error('PDF generation failed');
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+    // Extract the filename from the Content-Disposition header
+    const contentDisposition = res.headers.get('Content-Disposition');
+    let filename = 'remedy.pdf';  // Fallback to a default filename
 
-      // Create a download link
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'remedy.pdf';
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('PDF Error:', error);
-      alert('Could not generate PDF. Try again later.');
-    } finally {
-      setGeneratingPDF(false);
+    if (contentDisposition && contentDisposition.indexOf('attachment') !== -1) {
+      const matches = contentDisposition.match(/filename="([^"]+)"/);
+      if (matches && matches[1]) {
+        filename = matches[1];
+      }
     }
-  };
+
+    console.log('Filename extracted:', filename);  // For debugging
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    // Create a download link
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;  // <-- Use extracted filename here
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('PDF Error:', error);
+    alert('Could not generate PDF. Try again later.');
+  } finally {
+    setGeneratingPDF(false);
+  }
+};
+
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') sendMessage();

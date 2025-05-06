@@ -7,30 +7,24 @@ for children's illnesses using LangChain, OpenAI, FAISS, and PDF/email integrati
 
 Author: Preethi
 """
+import json
 import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from langchain.chains import create_history_aware_retriever
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.memory import ConversationSummaryBufferMemory
-from langchain_community.document_loaders import WebBaseLoader
-from langchain_community.vectorstores import FAISS
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import ChatOpenAI
 from openai import OpenAI
-from pydantic import BaseModel
-from weasyprint import HTML
+from pydantic import BaseModel, Field, ConfigDict
 
-import email_utils
-import pdf_utils
 import retrieverFAISS
+from relevance_score import grade_relevance
 
 # 🔹 Load environment variables
 load_dotenv()
@@ -59,9 +53,6 @@ urls = [
     # You can add new URLs here anytime
 ]
 
-
-
-
 retriever = retrieverFAISS.get_or_create_vectorstore(urls)
 
 retriever_prompt = ChatPromptTemplate.from_messages([
@@ -73,13 +64,15 @@ retriever_prompt = ChatPromptTemplate.from_messages([
 history_aware_retriever = create_history_aware_retriever(llm, retriever, retriever_prompt)
 
 response_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are a friendly medical assistant trained to give kitchen-based home remedies for children's illnesses.
+    ("system", """You are a friendly medical assistant trained to give kitchen-based home remedies for **children's illnesses only**.
+**Do not give remedies for adults or any non-child-related issue.** If the user clearly says they are asking for themselves (e.g., "I am an adult", "Can I use this too?", or "What about for me?"), politely respond:
+"I'm here to help with remedies for children's health using kitchen ingredients. If you’re asking for yourself, I recommend speaking with a healthcare provider. Let me know if you're asking about a child’s health instead!"
 
 - If the user provides ingredients commonly used for kids' symptoms, provide remedies in steps with instructions for each step.
 - If the user provides ingredients NOT commonly used for kids' symptoms, suggest common kitchen ingredients that ARE suitable for remedies, and explain why the user's ingredients are not ideal.
 - If the user does NOT provide any ingredients, suggest common home remedies using typical kitchen ingredients for common kids' symptoms, and explain the benefits of each remedy.
 - If there's no mention of a symptom or ingredients, kindly ask for more information.
-- If the user's input is not related to kids' symptoms or kitchen ingredients, say: 'I can only help with home remedies for kids' symptoms using kitchen ingredients right now.'
+- If the user's input is not related to kids' symptoms or kitchen ingredients, say: 'I'm sorry to hear that. I specialize in offering home remedies using kitchen ingredients for common children's symptoms. If you're looking for help with a child’s health issue, feel free to share the symptoms, and I'll do my best to assist!'
 
 Format all remedies in clear, numbered steps. Be concise and friendly.
 Example:
@@ -113,8 +106,6 @@ def generate_image(prompt: str):
         return None
 
 
-
-
 # 🔹 Chat Models
 class Message(BaseModel):
     role: str
@@ -127,7 +118,6 @@ class ChatRequest(BaseModel):
 
 class RemedyRequest(BaseModel):
     messages: list[Message]
-
 
 
 memory = ConversationSummaryBufferMemory(llm=llm, max_token_limit=256)  # Adjust token limit as needed
@@ -164,22 +154,37 @@ async def chat(req: ChatRequest):
 
 async def generate_title(last_ai_message):
     response = client.chat.completions.create(
-        model= "gpt-4o-mini",
+        model="gpt-4o-mini",
         messages=[{
-            "role":"system",
-            "content":"You are a helpful assistant that generates concise, informative titles for remedy instructions."
+            "role": "system",
+            "content": "You are a helpful assistant that generates concise, informative titles for remedy instructions."
         },
-        {
-            "role":"user",
-            "content":f"Suggest a short, clear title suitable as a file name for this remedy:\n{last_ai_message}"
-        }
+            {
+                "role": "user",
+                "content": f"Suggest a short, clear title suitable as a file name for this remedy:\n{last_ai_message}"
+            }
         ]
     )
     title = response.choices[0].message.content.strip()
     file_name = title.lower().replace(' ', '_').replace('&', 'and') + ".pdf"
-    print("response:::",file_name)
+    print("response:::", file_name)
 
     return file_name
+
+
+def readandwritetofile(entry):
+    file_path = "relevance_scores.json"
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = []
+    else:
+        data = []
+    data.append(entry)
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=4)
 
 
 @app.post("/generate_pdf")
@@ -189,7 +194,18 @@ async def generate_pdf(remedy_request: RemedyRequest):
     # Get the last AI message (remedy suggestion)
     last_ai_message = next((m.content for m in reversed(remedy_request.messages) if m.role != "user"),
                            "no Remedy found")
+    # Get last user message (question) and AI message (answer)
+    last_user_message = next((m.content for m in reversed(remedy_request.messages) if m.role == "user"), "")
 
+    # Evaluate relevance
+    relevance_score = grade_relevance(last_user_message, last_ai_message)
+    print("Relevance score:", relevance_score.relevant)
+    print("Explanation:", relevance_score.explanation)
+    entry = {"last_user_message:::": last_user_message,
+             "last_ai_message:::": last_ai_message,
+             "Relevance score:::": relevance_score.relevant,
+             "Explanation:::": relevance_score.explanation}
+    readandwritetofile(entry)
     # Generate the title for the PDF
     title = await generate_title(last_ai_message)
     print("Generated title:::", title)
@@ -198,11 +214,11 @@ async def generate_pdf(remedy_request: RemedyRequest):
     remedy_text = f"Recommended Remedy:\n{last_ai_message}"
 
     # Create the remedy PDF
-    pdf_path = pdf_utils.create_remedy_pdf(remedy_text,title)
-    print("Generated PDF Path:::", pdf_path)
+    # pdf_path = pdf_utils.create_remedy_pdf(remedy_text,title)
+    # print("Generated PDF Path:::", pdf_path)
 
     # Send the generated remedy PDF via email
-    await email_utils.send_remedy_email("preethisivakumar94@gmail.com", pdf_path)
+    # await email_utils.send_remedy_email("preethisivakumar94@gmail.com", pdf_path)
 
     # Return the generated PDF as a file response, using the generated title for filename
-    return FileResponse(pdf_path, filename=title, media_type='application/pdf')
+    # return FileResponse(pdf_path, filename=title, media_type='application/pdf')
