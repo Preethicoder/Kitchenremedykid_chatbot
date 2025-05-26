@@ -49,6 +49,7 @@ def get_or_create_vectorstore(urls: List[str]):
     else:
         print("🆕 Creating new FAISS index...")
         documents = load_documents_from_urls(new_urls)
+
         vectorstore = FAISS.from_documents(documents, embedding)
         vectorstore.save_local(FAISS_INDEX_PATH)
         print("✅ FAISS index created and saved.")
