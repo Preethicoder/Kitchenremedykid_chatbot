@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
+import ReactMarkdown from 'react-markdown';
 
 function App() {
   const [messages, setMessages] = useState([
@@ -105,7 +106,7 @@ function App() {
             key={idx}
             className={`message ${msg.role === 'user' ? 'user-message' : 'ai-message'}`}
           >
-            {msg.content}
+            <ReactMarkdown>{msg.content}</ReactMarkdown>
             {msg.imageUrl && <img src={msg.imageUrl} alt="Generated Remedy" />}
           </div>
         ))}
