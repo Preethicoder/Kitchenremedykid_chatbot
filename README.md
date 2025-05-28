@@ -9,6 +9,7 @@ HomeCure-Kids is a web-based chatbot that provides kitchen-based home remedies f
 - 🗨️ **Conversational Interface** – Type symptoms and receive remedy suggestions.
 - 🧠 **Context-Aware** – Understands chat history for relevant results.
 - 🍋 **Kitchen Ingredients Only** – All remedies are based on household items.
+- 🧪 **Hybrid Retrieval** – Combines dense + sparse + reranking for better accuracy.
 - ⚡ **Fast & Responsive** – Built with FastAPI backend and a React frontend.
 - 📚 **Web Data Powered** – Uses trusted online sources to provide suggestions.
 
@@ -16,14 +17,27 @@ HomeCure-Kids is a web-based chatbot that provides kitchen-based home remedies f
 
 ## 🧰 Tech Stack
 
-| Layer      | Technology         |
-|------------|--------------------|
-| Frontend   | React              |
-| Backend    | FastAPI            |
-| AI         | OpenAI (GPT model) |
-| Retrieval  | LangChain + FAISS  |
-| Scraping   | WebBaseLoader      |
-| Language   | Python + JavaScript|
+| Layer        | Technology                 |
+|--------------|----------------------------|
+| Frontend     | React                      |
+| Backend      | FastAPI                    |
+| AI           | OpenAI (GPT model)         |
+| Retrieval    | LangChain + FAISS + BM25   |
+| Reranking    | Cross-Encoder (Optional)   |
+| Scraping     | WebBaseLoader              |
+| Language     | Python + JavaScript        |
+
+---
+
+## 🔍 Retrieval Strategy (Hybrid Search)
+
+To deliver the most relevant remedy suggestions, HomeCure-Kids uses a **hybrid retrieval** system:
+
+- **Dense Retrieval**: Uses FAISS with sentence-transformer embeddings to retrieve semantically similar documents based on symptoms and context.
+- **Sparse Retrieval**: Uses BM25 (via `rank_bm25`) to perform keyword-based search, especially effective for exact matches like ingredient names or common phrases.
+- **Context-Awareness**: Dense retriever uses recent chat history to better understand ongoing conversations.
+- **Reranking**: All retrieved documents are scored using a Cross-Encoder model, and the top results are selected for the LLM.
+- ✅ **Benefit**: Significantly improves relevance and robustness across different user query styles.
 
 ---
 
