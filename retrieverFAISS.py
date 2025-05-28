@@ -6,12 +6,15 @@ from dotenv import load_dotenv
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from  langchain_openai import OpenAIEmbeddings
 load_dotenv()
 FAISS_INDEX_PATH = "faiss_index"
 SEEN_URLS_PATH = Path("seen_urls.txt")
 embedding = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
-text_splitter = RecursiveCharacterTextSplitter()
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=500,
+    chunk_overlap=50,
+    length_function=len,
+    separators=["\n\n", "\n", ".", " ", ""])
 
 def load_documents_from_urls(urls: List[str]):
     """Load and split documents from a list of URLs."""

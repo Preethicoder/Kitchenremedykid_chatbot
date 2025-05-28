@@ -11,6 +11,8 @@ import json
 import os
 
 import asyncio
+
+from langchain_community.retrievers import BM25Retriever
 from sentence_transformers import CrossEncoder
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -68,7 +70,10 @@ urls = [
     "https://www.nationwidechildrens.org/family-resources-education/family-resources-library/a-guide-to-common-medicinal-herbs "
     # You can add new URLs here anytime
 ]
-
+# Load and split documents from URLs (reusing your function)
+docs = retrieverFAISS.load_documents_from_urls(urls)
+# Create the BM25 sparse retriever
+sparse_retriever = BM25Retriever.from_documents(docs)
 retriever = retrieverFAISS.get_or_create_vectorstore(urls)
 print("retrieever",retriever)
 
@@ -139,9 +144,33 @@ class RemedyRequest(BaseModel):
     messages: list[Message]
 
 
-memory = ConversationSummaryBufferMemory(llm=llm, max_token_limit=256)  # Adjust token limit as needed
+memory = ConversationSummaryBufferMemory(llm=llm, max_token_limit=256)# Adjust token limit as needed
+def get_sparse_with_history(sparse_retriever, memory, current_input):
+    history_text = "\n".join(
+        [msg.content for msg in memory.chat_memory.messages if isinstance(msg, HumanMessage)]
+    )
+    full_query = history_text + "\n" + current_input
+    return sparse_retriever.get_relevant_documents(full_query)
 
+def hybrid_retrieve_and_rerank(query: str, retrieved_docs, sparse_docs, reranker, top_k=4):
+    all_docs = retrieved_docs + sparse_docs
+    unique_docs = {doc.page_content: doc for doc in all_docs}.values()
+    # Step 2: Rerank the retrieved documents
 
+    doc_pairs = [(query, docs.page_content) for docs in unique_docs]
+    scores = reranker.predict(doc_pairs)
+
+    # Combine scores with docs and sort
+    scored_docs = list(zip(unique_docs, scores))
+    scored_docs.sort(key=lambda x: x[1], reverse=True)
+
+    # Take top-k docs after reranking
+
+    reranked_docs = [doc for doc, score in scored_docs[:top_k]]
+
+    for doc in reranked_docs:
+        print("reranked:::", doc.page_content)
+    return reranked_docs
 @app.post("/chat")
 async def chat(req: ChatRequest, background_tasks: BackgroundTasks):
     chat_history = []
@@ -159,22 +188,10 @@ async def chat(req: ChatRequest, background_tasks: BackgroundTasks):
         "chat_history": memory.chat_memory.messages,
         "input": current_input
     })
+    # Step 2: Sparse retrieval
+    sparse_docs = get_sparse_with_history(sparse_retriever, memory, current_input)
 
-    # Step 2: Rerank the retrieved documents
-    query = current_input
-    doc_pairs = [(query,docs.page_content)for docs in retrieved_docs]
-    scores = reranker.predict(doc_pairs)
-
-    # Combine scores with docs and sort
-    scored_docs = list(zip(retrieved_docs, scores))
-    scored_docs.sort(key=lambda x:x[1],reverse=True)
-
-    # Take top-k docs after reranking
-    top_k = 4
-    reranked_docs = [doc for doc,score in scored_docs[:top_k]]
-
-    for doc in reranked_docs:
-        print("reranked:::",doc.page_content)
+    reranked_docs = hybrid_retrieve_and_rerank(current_input,retrieved_docs,sparse_docs,reranker)
     # Then it combines the fetched info + chat history + input and sends it to the language model to get a final response.
     response = document_chain.invoke({
         "context": reranked_docs,
