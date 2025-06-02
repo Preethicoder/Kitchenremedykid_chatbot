@@ -1,4 +1,4 @@
-# 🧑‍🍳 HomeCure-Kids Chatbot
+# 🧑‍🍳 Kitchenremedykid_chatbot
 
 HomeCure-Kids is a web-based chatbot that provides kitchen-based home remedies for children’s illnesses. It uses FastAPI, LangChain, and OpenAI to deliver symptom-based suggestions in an interactive and friendly way.
 
