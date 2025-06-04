@@ -91,6 +91,23 @@ The app will run at: http://localhost:3000
 - 📧 **Email Support** – Remedy PDFs can be sent directly to your inbox.
 - ✅ **Relevance Evaluation** – Each remedy is automatically evaluated for accuracy and relevance.
 
+## 📨 Email Delivery (via Celery)
+
+Email sending is handled as a **background task** using [Celery](https://docs.celeryq.dev/). This ensures that the FastAPI server remains responsive and does not block while sending emails.
+
+### How It Works
+
+- When a PDF is generated, an email-sending task is pushed to a Celery queue.
+- A Celery worker (connected to Redis) processes the task and sends the email.
+
+### Requirements
+
+Make sure you have:
+- Redis installed and running on `localhost:6379`
+- A Celery worker running with:
+  ```bash
+  celery -A tasks.email_tasks worker --loglevel=info
+
 ### 🧪 Testing the Chatbot (Extended)
 
 1. Open http://localhost:3000 in your browser.
