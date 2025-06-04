@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from starlette.responses import FileResponse
 from fastapi import BackgroundTasks
 import email_utils
+from tasks.email_tasks import send_remedy_email_task
 import pdf_utils
 import retrieverFAISS
 from relevance_score import grade_relevance
@@ -75,7 +76,7 @@ docs = retrieverFAISS.load_documents_from_urls(urls)
 # Create the BM25 sparse retriever
 sparse_retriever = BM25Retriever.from_documents(docs)
 retriever = retrieverFAISS.get_or_create_vectorstore(urls)
-print("retrieever",retriever)
+
 
 retriever_prompt = ChatPromptTemplate.from_messages([
     MessagesPlaceholder(variable_name="chat_history"),
@@ -172,7 +173,7 @@ def hybrid_retrieve_and_rerank(query: str, retrieved_docs, sparse_docs, reranker
         print("reranked:::", doc.page_content)
     return reranked_docs
 @app.post("/chat")
-async def chat(req: ChatRequest, background_tasks: BackgroundTasks):
+async def chat(req: ChatRequest):
     chat_history = []
     for msg in req.messages[:-1]:
         if msg.role == "user":
@@ -278,7 +279,10 @@ async def generate_pdf(remedy_request: RemedyRequest):
     print("Generated PDF Path:::", pdf_path)
 
     # Send the generated remedy PDF via email
-    await email_utils.send_remedy_email("preethisivakumar94@gmail.com", pdf_path)
+    #await email_utils.send_remedy_email("preethisivakumar94@gmail.com", pdf_path)
+
+    # ✅ Run email task asynchronously via Celery
+    send_remedy_email_task.delay("preethisivakumar94@gmail.com", pdf_path)
 
     # Return the generated PDF as a file response, using the generated title for filename
     return FileResponse(pdf_path, filename=title, media_type='application/pdf')
