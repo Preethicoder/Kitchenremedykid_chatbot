@@ -10,8 +10,6 @@ Author: Preethi
 import json
 import os
 
-import asyncio
-
 from langchain_community.retrievers import BM25Retriever
 from sentence_transformers import CrossEncoder
 from dotenv import load_dotenv
@@ -25,14 +23,14 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from openai import OpenAI
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel
 from starlette.responses import FileResponse
-from fastapi import BackgroundTasks
-import email_utils
-from tasks.email_tasks import send_remedy_email_task
-import pdf_utils
-import retrieverFAISS
-from relevance_score import grade_relevance
+
+from app import retrieverFAISS
+from app.tasks.email_tasks import send_remedy_email_task
+from app import pdf_utils
+
+from app.relevance_score import grade_relevance
 
 # 🔹 Load environment variables
 load_dotenv()
@@ -227,14 +225,18 @@ async def generate_title(last_ai_message):
         ]
     )
     title = response.choices[0].message.content.strip()
-    file_name = title.lower().replace(' ', '_').replace('&', 'and') + ".pdf"
+    title = title.strip('\"\'')
+    file_name = title.lower().replace(' ', '_').replace('&', 'and')
+    # Make sure you add .pdf only once
+    if not file_name.endswith('.pdf'):
+        file_name += '.pdf'
     print("response:::", file_name)
 
     return file_name
 
 
 def readandwritetofile(entry):
-    file_path = "relevance_scores.json"
+    file_path = "../relevance_scores.json"
     if os.path.exists(file_path):
         with open(file_path, "r") as f:
             try:
@@ -275,7 +277,7 @@ async def generate_pdf(remedy_request: RemedyRequest):
     remedy_text = f"Recommended Remedy:\n{last_ai_message}"
 
     # Create the remedy PDF
-    pdf_path = pdf_utils.create_remedy_pdf(remedy_text,title)
+    pdf_path = pdf_utils.create_remedy_pdf(remedy_text, title)
     print("Generated PDF Path:::", pdf_path)
 
     # Send the generated remedy PDF via email

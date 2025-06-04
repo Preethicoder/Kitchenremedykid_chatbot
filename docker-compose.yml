@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: kitchenremedy_app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./pdfs:/app/pdfs  # <--- MOUNTED VOLUME HERE
+    depends_on:
+      - redis
+
+  celery:
+    build: .
+    container_name: celery_worker
+    command: ["./celery_worker.sh"]
+    env_file:
+      - .env
+    volumes:
+      - ./pdfs:/app/pdfs  # <--- SAME MOUNT HERE
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7
+    container_name: redis_broker
+    ports:
+      - "6379:6379"
+  frontend:
+    build:
+      context: ./homecure-frontend
+      dockerfile: Dockerfile
+    container_name: kitchenremedy_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - web

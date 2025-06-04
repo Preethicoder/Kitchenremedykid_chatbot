@@ -1,6 +1,6 @@
 import os
 
-from flask.cli import load_dotenv
+from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI, OpenAI
 from pydantic import BaseModel, Field, ConfigDict
 load_dotenv()

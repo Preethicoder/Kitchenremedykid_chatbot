@@ -1,5 +1,6 @@
 # ➕ Create remedy PDF
 import os
+from pathlib import Path
 
 from weasyprint import HTML
 
@@ -22,7 +23,14 @@ def create_remedy_pdf(remedy_text: str, filename: str = "remedy.pdf") -> str:
   </body>
 </html>
 """)
-    os.makedirs("pdfs", exist_ok=True)
-    pdf_path = f"./pdfs/{filename}"
-    HTML(string=html_content).write_pdf(pdf_path)
-    return pdf_path
+    # Create a path object for the 'pdfs' directory
+    pdf_dir = Path("./pdfs")
+    pdf_dir.mkdir(parents=True, exist_ok=True)
+
+    # Full path to the PDF file
+    pdf_path = pdf_dir / filename
+
+    # Generate the PDF
+    HTML(string=html_content).write_pdf(str(pdf_path))
+
+    return str(pdf_path)

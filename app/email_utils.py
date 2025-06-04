@@ -20,7 +20,7 @@ conf = ConnectionConfig(
 async def send_remedy_email(to: str, pdf_path: str):
     with open(pdf_path, "rb") as f:
         file_data = f.read()
-
+    filename = os.path.basename(pdf_path)
     message = MessageSchema(
         subject="Your Remedy PDF from HomeCure Kids",
         recipients=[to],  # list of emails

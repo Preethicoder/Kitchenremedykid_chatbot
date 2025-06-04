@@ -8,8 +8,8 @@ from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from  langchain_openai import OpenAIEmbeddings
 load_dotenv()
-FAISS_INDEX_PATH = "faiss_index"
-SEEN_URLS_PATH = Path("seen_urls.txt")
+FAISS_INDEX_PATH = "../faiss_index"
+SEEN_URLS_PATH = Path("../seen_urls.txt")
 embedding = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500,
     chunk_overlap=50,
@@ -28,7 +28,7 @@ def load_documents_from_urls(urls: List[str]):
 
 def get_or_create_vectorstore(urls: List[str]):
     """Create or update FAISS vectorstore from provided URLs."""
-    seen_urls_path = Path("seen_urls.txt")
+    seen_urls_path = Path("../seen_urls.txt")
     if seen_urls_path.exists():
         seen_urls = set(seen_urls_path.read_text().splitlines())
     else:

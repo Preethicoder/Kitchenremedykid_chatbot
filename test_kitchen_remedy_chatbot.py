@@ -1,9 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 
-from retrieverFAISS import get_or_create_vectorstore
+from app.retrieverFAISS import get_or_create_vectorstore
 
 
 class TestKitchenRemedyChatbot(unittest.TestCase):
