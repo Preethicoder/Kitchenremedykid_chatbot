@@ -16,16 +16,17 @@ HomeCure-Kids is a web-based chatbot that provides kitchen-based home remedies f
 ---
 
 ## 🧰 Tech Stack
-
 | Layer        | Technology                 |
 |--------------|----------------------------|
-| Frontend     | React                      |
+| Frontend     | React + Nginx              |
 | Backend      | FastAPI                    |
 | AI           | OpenAI (GPT model)         |
 | Retrieval    | LangChain + FAISS + BM25   |
 | Reranking    | Cross-Encoder (Optional)   |
 | Scraping     | WebBaseLoader              |
 | Language     | Python + JavaScript        |
+| Task Queue   | Celery + Redis             |
+| Containerization | Docker + Docker Compose |
 
 ---
 
@@ -40,8 +41,19 @@ To deliver the most relevant remedy suggestions, HomeCure-Kids uses a **hybrid r
 - ✅ **Benefit**: Significantly improves relevance and robustness across different user query styles.
 
 ---
+## 🛠️ Local Development vs Docker
 
-## 🚀 Setup Instructions
+You can run the project using either:
+
+| Mode              | Purpose                      | How to Run                            |
+|-------------------|------------------------------|----------------------------------------|
+| Manual (local)    | Development with hot reload  | Follow backend & frontend setup below |
+| Docker (all-in-one)| Production-style container setup | `docker-compose up --build`         |
+
+> ⚠️ If you're using Docker, you **don’t need to run anything manually**.
+
+---
+## 🚀 Manual Setup Instructions
 
 ### 🔧 Backend Setup (FastAPI)
 
@@ -93,7 +105,8 @@ The app will run at: http://localhost:3000
 
 ## 📨 Email Delivery (via Celery)
 
-Email sending is handled as a **background task** using [Celery](https://docs.celeryq.dev/). This ensures that the FastAPI server remains responsive and does not block while sending emails.
+Email sending is handled as a **background task** using [Celery](https://docs.celeryq.dev/). 
+This ensures that the FastAPI server remains responsive and does not block while sending emails.
 
 ### How It Works
 
