@@ -107,8 +107,49 @@ Make sure you have:
 - A Celery worker running with:
   ```bash
   celery -A tasks.email_tasks worker --loglevel=info
+  
+### 🐳 Docker Setup
+This project is fully containerized using Docker Compose. It includes the following services:
 
-### 🧪 Testing the Chatbot (Extended)
+web: FastAPI backend server
+
+celery: Background task worker
+
+redis: Message broker for Celery
+
+frontend: React-based user interface
+
+### 📦 Build and Run All Services
+     Run the following command from the root of the project:
+     ```bash
+     docker-compose up --build
+
+This will:
+
+--- Build all services (web, celery, frontend)
+
+--- Start them in detached mode
+
+--- Ensure inter-service communication
+
+### 🌐 Accessing the App
+Service	         URL	                               Description
+Frontend	    http://localhost:3000	      React user interface served via Nginx
+Backend API	 http://localhost:8000/docs	FastAPI interactive Swagger docs
+Redis	       Internal use only	         Used by Celery
+
+### 📁 Volumes
+The backend and Celery share a volume for generated PDFs:
+
+yaml
+./pdfs:/app/pdfs
+
+### ⚠️ Notes
+   If you're making code changes to the frontend or backend, rebuild the containers:
+   docker-compose up --build
+   Make sure .env exists in your root directory with all required environment variables.
+
+###  🧪 Testing the Chatbot (Extended)
 
 1. Open http://localhost:3000 in your browser.
 2. Ask a question like "My kid has a sore throat".
@@ -117,6 +158,7 @@ Make sure you have:
    - Show a visual guide (image).
    - Optionally allow you to export the remedy as a PDF.
    - Internally evaluate how relevant the answer is and log it.
+
 
 
 ### 🙌 Contributing
